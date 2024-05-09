@@ -4,12 +4,6 @@ import pytest
 
 from importphotos.validators import FileValidator
 
-def side_effect(arg):
-    if arg == 1:
-        return True
-    else:
-        return False
-
 def test_file_extension():
     """Test file_extension validator."""
     assert FileValidator.file_extension(".jpg") == (".JPG",)
@@ -21,11 +15,11 @@ def test_file_extension():
     with pytest.raises(argparse.ArgumentTypeError):
         FileValidator.file_extension(".jpg, .jpeg, .file_extension")
 
-def test_file_path():
+def test_file_path(mocker):
     """Test file_path validator."""
-    #TODO: Mock os.path.exists
+    mocker.patch("os.path.exists", side_effect=[True, False, False])
     assert FileValidator.file_path("tests/test_validators.py") == "tests/test_validators.py"
     with pytest.raises(argparse.ArgumentTypeError):
-        FileValidator.file_path("tests/test_validators.pyx")
+        FileValidator.file_path("tests/test_validators.py")
     with pytest.raises(argparse.ArgumentTypeError):
         FileValidator.file_path("tests/test_validators.py, tests/test_validators.pyx")

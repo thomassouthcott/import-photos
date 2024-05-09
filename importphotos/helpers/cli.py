@@ -7,7 +7,7 @@ import shutil
 from tabulate import tabulate
 
 WIDTH = 86
-def _find_last_space(text : str, width : int):
+def find_last_space(text : str, width : int):
     """Find the last space in the text before the width"""
     if len(text) < width:
         return len(text) - 1
@@ -41,7 +41,7 @@ def print_message(message : str):
     """Prints a message"""
     text_width = WIDTH - 4
     while True:
-        last_space = _find_last_space(message, text_width)
+        last_space = find_last_space(message, text_width)
         line = message[0:last_space+1]
         message = message[last_space:]
         print(f"# {line}".ljust(text_width+2, ' ') + ' #')

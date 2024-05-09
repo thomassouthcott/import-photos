@@ -1,6 +1,5 @@
+"""Unit Tests for importphotos.lib module."""
 import datetime
-
-from PIL import UnidentifiedImageError
 import pytest
 
 from importphotos.lib import Photo
@@ -20,7 +19,7 @@ def test_photo_init(mocker):
     assert photo.path == "tests/data/IMG_20210101_000000.ARW"
 
 def test_photo_get_date_taken(mocker):
-    """Test Photo class get_date_taken."""
+    """Test Photo class get_date_taken, exit data present."""
     taken = datetime.datetime.fromisoformat("2021-01-01:00:00:00")
     mocker.patch("os.path.exists", return_value=True)
     magic_mock = mocker.MagicMock()
@@ -30,7 +29,7 @@ def test_photo_get_date_taken(mocker):
     assert photo.date_taken == taken
 
 def test_photo_get_date_taken_no_exif_alternative(mocker):
-    """Test Photo class get_date_taken."""
+    """Test Photo class get_date_taken, no exif data, alternative file to read."""
     taken = datetime.datetime.fromisoformat("2021-01-01:00:00:00")
     mocker.patch("os.path.exists", return_value=True)
     bad_mock = mocker.MagicMock()
@@ -42,7 +41,7 @@ def test_photo_get_date_taken_no_exif_alternative(mocker):
     assert photo.date_taken == taken
 
 def test_photo_get_date_taken_no_exif_no_alternative(mocker):
-    """Test Photo class get_date_taken."""
+    """Test Photo class get_date_taken, no exif data, no alternative file to read."""
     taken = datetime.datetime.fromisoformat("2021-01-01:00:00:00")
     mocker.patch("os.path.exists", side_effect=[True, False, False])
     mock = mocker.MagicMock()
@@ -53,7 +52,7 @@ def test_photo_get_date_taken_no_exif_no_alternative(mocker):
     assert photo.date_taken == taken
 
 def test_photo_get_date_taken_no_exif_no_alternative_jpg(mocker):
-    """Test Photo class get_date_taken."""
+    """Test Photo class get_date_taken, no exit, no alternative because it is a jpg."""
     taken = datetime.datetime.fromisoformat("2021-01-01:00:00:00")
     mocker.patch("os.path.exists", side_effect=[True, True, False])
     mock = mocker.MagicMock()
