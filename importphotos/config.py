@@ -9,16 +9,16 @@ from importphotos.validators import FileValidator
 @dataclasses.dataclass
 class Config:
     """Class to hold the configuration of the program"""
-    _config: configparser.ConfigParser
+    _config: dict[str, dict[str, str]]
     source_dir: str
     destination_dir: str
-    file_types: list
+    file_types: list[str]
 
     def __init__(self):
         self._config = self._read_config()
-        self.source_dir = self._get_config_item("DEFAULT", "source_dir")
-        self.destination_dir = self._get_config_item("DEFAULT", "destination_dir")
-        self.file_types = self._get_config_item("DEFAULT", "file_types")
+        self.source_dir = self.get_config_item("DEFAULT", "source_dir")
+        self.destination_dir = self.get_config_item("DEFAULT", "destination_dir")
+        self.file_types = self.get_config_item("DEFAULT", "file_types")
         try:
             self.validate()
         except configparser.Error as exc:
@@ -29,7 +29,7 @@ class Config:
         self._set_config_item("DEFAULT", "source_dir", self.source_dir)
         self._set_config_item("DEFAULT", "destination_dir", self.destination_dir)
         self._set_config_item("DEFAULT", "file_types", self.file_types)
-        self._write_config(self._config)
+        self._write_config(self)
 
     def validate(self):
         """Validates the configuration"""
@@ -41,20 +41,29 @@ class Config:
         except argparse.ArgumentTypeError as exc:
             raise configparser.Error(f"Configuration is invalid: {exc}") from exc
 
-    def _get_config_item(self, group, key):
+    def get_config_item(self, group, key):
         """Returns the value of the key in the group"""
         try:
+            print(self._config)
+            if not group in self._config.keys():
+                raise KeyError(f"Group {group} not found")
+            if not key in self._config[group].keys():
+                raise KeyError(f"Key {key} not found in group {group}")
             if key.endswith("s"):
                 return self._config[group][key].split(", ")
-            else:
-                return self._config[group][key]
+            return self._config[group][key]
         except KeyError as exc:
             raise KeyError(f"Key {key} not found in group {group}") from exc
 
     def _set_config_item(self, group, key, value):
         """Sets the value of the key in the group"""
         try:
+            if not group in self._config.keys():
+                raise KeyError(f"Group {group} not found")
+            if not key in self._config[group].keys():
+                raise KeyError(f"Key {key} not found in group {group}")
             if key.endswith("s"):
+                print(f"Setting {key} to {", ".join(value)}")
                 self._config[group][key] = ", ".join(value)
             else:
                 self._config[group][key] = value
