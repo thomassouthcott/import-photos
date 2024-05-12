@@ -6,11 +6,14 @@ from importphotos.validators import FileValidator
 
 class ArgumentParser(argparse.ArgumentParser):
     """Argument parser for ImportPhotos.py"""
-    def __init__(self):
+    def __init__(self,
+                 prog='ImportPhotos.py',
+                 description='Sync photos from source folder to destination folder, examines EXIF data for date taken and sorts by year-month.',
+                 epilog='See config.ini for configuration options.'):
         super().__init__(
-            prog='ImportPhotos.py',
-            description='Sync photos from source folder to destination folder, examines EXIF data for date taken and sorts by year-month.',
-            epilog='See config.ini for configuration options.')
+            prog=prog,
+            description=description,
+            epilog=epilog)
         self.add_argument('foldername', default=None, type=str, nargs='?',
                             help='Name of the sub-folder to copy files to. If not provided, will sort by year-month.')
         self.add_argument('-r', '--recursive', action='store_true',
