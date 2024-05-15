@@ -6,7 +6,10 @@ import shutil
 
 from tabulate import tabulate
 
-WIDTH = 86
+def width():
+    """Returns the width of the terminal"""
+    return shutil.get_terminal_size(fallback = (86, 1))[0]
+
 def find_last_space(text : str, width : int):
     """Find the last space in the text before the width"""
     if len(text) < width:
@@ -18,55 +21,58 @@ def find_last_space(text : str, width : int):
 
 def print_banner(author : str, version : float):
     """Prints the banner for the program"""
-    print("#" * WIDTH)
-    print(r"""#  _____                              _____                            _             #
-# |_   _|                            |_   _|                          | |            #
-#   | |  _ __ ___   __ _  __ _  ___    | |  _ __ ___  _ __   ___  _ __| |_ ___ _ __  #
-#   | | | '_ ` _ \ / _` |/ _` |/ _ \   | | | '_ ` _ \| '_ \ / _ \| '__| __/ _ \ '__| #
-#  _| |_| | | | | | (_| | (_| |  __/  _| |_| | | | | | |_) | (_) | |  | ||  __/ |    #
-# |_____|_| |_| |_|\__,_|\__, |\___| |_____|_| |_| |_| .__/ \___/|_|   \__\___|_|    #
-#                         __/ |                      | |                             #
-#                        |___/                       |_|                             #""")
-    print("#" * WIDTH)
-    print('#' + f" Author: {author} # Version {version} ".center(WIDTH-2, '#') + '#')
-    print("#" * WIDTH)
+    print("#" * width())
+    print("#" + r"  _____                              _____                            _             ".center(width()-2, ' ') + '#')
+    print("#" + r" |_   _|                            |_   _|                          | |            ".center(width()-2, ' ') + '#')
+    print("#" + r"   | |  _ __ ___   __ _  __ _  ___    | |  _ __ ___  _ __   ___  _ __| |_ ___ _ __  ".center(width()-2, ' ') + '#')
+    print("#" + r"   | | | '_ ` _ \ / _` |/ _` |/ _ \   | | | '_ ` _ \| '_ \ / _ \| '__| __/ _ \ '__| ".center(width()-2, ' ') + '#')
+    print("#" + r"  _| |_| | | | | | (_| | (_| |  __/  _| |_| | | | | | |_) | (_) | |  | ||  __/ |    ".center(width()-2, ' ') + '#')
+    print("#" + r" |_____|_| |_| |_|\__,_|\__, |\___| |_____|_| |_| |_| .__/ \___/|_|   \__\___|_|    ".center(width()-2, ' ') + '#')
+    print("#" + r"                         __/ |                      | |                             ".center(width()-2, ' ') + '#')
+    print("#" + r"                        |___/                       |_|                             ".center(width()-2, ' ') + '#')
+    print("#" * width())
+    half = int(width()/2)-1
+    print('#' + f" Author: {author} ".center(half-1 if width() % 2 == 0 else half, ' ') + '#' +f" Version {version} ".center(half, ' ') + '#')
+    print("#" * width())
+    print_message("Welcome to the Import Photos program. This program is designed to help you import photos from a camera or phone into a folder on your computer. It can automatically sort the photos into folders based on the date they were taken or copy to a given folder name.")
 
-def print_header(text : str):
+def print_header(text : str, strength : int = 1):
     """Prints a header with the text centered in the middle of the line"""
-    print("#" * WIDTH)
-    print(f"#{text.center(WIDTH - 2, '#')}#")
-    print("#" * WIDTH)
+    if strength > 1:
+        print("#" * width())
+        print(f"#{text.center(width() - 2, ' ')}#")
+        print("#" * width())
+    else:
+        print(f"#{f" {text} ".center(width() - 2, '#')}#")
 
 def print_message(message : str):
     """Prints a message"""
-    text_width = WIDTH - 4
-    while True:
-        last_space = find_last_space(message, text_width)
-        line = message[0:last_space+1]
-        message = message[last_space:]
-        print(f"# {line}".ljust(text_width+2, ' ') + ' #')
-        if len(message) < text_width:
-            break
+    message = str(message)
+    message = message.strip()
+    while len(message) > width() - 2:
+        last_space = find_last_space(message, width() -  4)
+        print(f"# {message[:last_space+1].ljust(width()-4, ' ')} #")
+        message = message[last_space + 1:]
+    print(f"# {message.ljust(width() - 4, ' ')} #")
 
 def print_done():
     """Prints a done message"""
-    print_message("DONE!")
+    print_header("DONE!")
 
 def print_table(headers: list, rows : list[list]):
     """Prints a table"""
     lines = tabulate(rows, headers, tablefmt="grid").split('\n')
-
-    if len(lines[0]) > WIDTH:
-        print('\n'.join(lines))
-        return
     for line in lines:
-        print_message(line)
+        if len(line) > width() - 4:
+            print(line)
+        else:
+            print_message(line)
 
 def print_dict(dictionary : dict):
     """Prints a dictionary"""
     for key, value in dictionary.items():
-        message = f"# {key} # {value} "
-        print(message.ljust(WIDTH - 1, ' ') + '#')
+        message = f"# {key} # {value} ".ljust(width() - 1, ' ') + "#"
+        print(message)
 
 
 #From https://gist.github.com/greenstick/b23e475d2bfdc3a82e34eaa1f6781ee4
@@ -85,9 +91,11 @@ def print_progress_bar (iteration : int, total : int, prefix = '', suffix = '', 
     """
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
     styling = '%s |%s| %s%% %s' % (prefix, fill, percent, suffix)
+    cols, _ = shutil.get_terminal_size(fallback = (width(), 1))
+    length = cols - len(styling) - 2
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
-    print('\r%s' % styling.replace(fill, bar), end = '\r')
+    print('\r# %s' % styling.replace(fill, bar), end = '#\r')
     # Print New Line on Complete
     if iteration == total:
         print()
@@ -95,7 +103,7 @@ def print_progress_bar (iteration : int, total : int, prefix = '', suffix = '', 
 def input_yes_no(prompt : str):
     """Prompt the user for a yes or no response"""
     while True:
-        response = input(prompt)
+        response = input(f"# {prompt}")
         if not response:
             return False
         if response[0].upper() == "Y":
@@ -108,7 +116,7 @@ def input_yes_no(prompt : str):
 def input_date(prompt : str):
     """Prompt the user for a date"""
     while True:
-        response = input(prompt)
+        response = input(f"# {prompt}")
         if not response:
             return response
         try:
@@ -119,7 +127,7 @@ def input_date(prompt : str):
 def input_custom(prompt : str, func, help_text : str):
     """Prompt the user for a custom input"""
     while True:
-        response = input(prompt)
+        response = input(f"# {prompt}")
         if not response:
             return response
         try:

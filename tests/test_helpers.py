@@ -18,28 +18,31 @@ def test_print_banner(capsys):
     """Test the print_banner function."""
     importphotos.helpers.cli.print_banner('John Doe', 1.0)
     captured = capsys.readouterr()
-    assert captured.out == r"""######################################################################################
-#  _____                              _____                            _             #
-# |_   _|                            |_   _|                          | |            #
-#   | |  _ __ ___   __ _  __ _  ___    | |  _ __ ___  _ __   ___  _ __| |_ ___ _ __  #
-#   | | | '_ ` _ \ / _` |/ _` |/ _ \   | | | '_ ` _ \| '_ \ / _ \| '__| __/ _ \ '__| #
-#  _| |_| | | | | | (_| | (_| |  __/  _| |_| | | | | | |_) | (_) | |  | ||  __/ |    #
-# |_____|_| |_| |_|\__,_|\__, |\___| |_____|_| |_| |_| .__/ \___/|_|   \__\___|_|    #
-#                         __/ |                      | |                             #
-#                        |___/                       |_|                             #
-######################################################################################
-########################### Author: John Doe # Version 1.0 ###########################
-######################################################################################
-"""
+    assert "####################################################################################" in captured.out
+    assert "  _____                              _____                            _             " in captured.out
+    assert " |_   _|                            |_   _|                          | |            " in captured.out
+    assert "   | |  _ __ ___   __ _  __ _  ___    | |  _ __ ___  _ __   ___  _ __| |_ ___ _ __  " in captured.out
+    assert "   | | | '_ ` _ \ / _` |/ _` |/ _ \   | | | '_ ` _ \| '_ \ / _ \| '__| __/ _ \ '__| " in captured.out
+    assert "  _| |_| | | | | | (_| | (_| |  __/  _| |_| | | | | | |_) | (_) | |  | ||  __/ |    " in captured.out
+    assert " |_____|_| |_| |_|\__,_|\__, |\___| |_____|_| |_| |_| .__/ \___/|_|   \__\___|_|    " in captured.out
+    assert "                         __/ |                      | |                             " in captured.out
+    assert "                        |___/                       |_|                             " in captured.out
+    assert "####################################################################################" in captured.out
+    assert "Author: John Doe" in captured.out
+    assert "Version 1.0" in captured.out
+    assert "####################################################################################" in captured.out
 
 def test_print_header(capsys):
     """Test the print_header function."""
-    importphotos.helpers.cli.print_header('This is a test')
+    importphotos.helpers.cli.print_header('This is a test', 2)
     captured = capsys.readouterr()
-    assert captured.out == r"""######################################################################################
-####################################This is a test####################################
-######################################################################################
-"""
+    assert "#####################################################################################" in captured.out
+    assert "This is a test" in captured.out
+    assert "#####################################################################################" in captured.out
+    importphotos.helpers.cli.print_header('This is a test', 1)
+    captured = capsys.readouterr()
+    print(captured.out)
+    assert "################################### This is a test ###################################" in captured.out
 
 def test_print_message(capsys):
     """Test the print_message function."""
@@ -52,21 +55,20 @@ def test_print_done(capsys):
     """Test the print_done function."""
     importphotos.helpers.cli.print_done()
     captured = capsys.readouterr()
-    assert captured.out == r"""# DONE!                                                                              #
-"""
+    assert """################################### DONE! ###################################""" in captured.out
 
 def test_print_table(mocker, capsys):
     """Test the print_table function."""
     importphotos.helpers.cli.print_table(['Header 1', 'Header 2'], [['Row 1-1', 'Row 1-2'], ['Row 2-1', 'Row 2-2']])
     captured = capsys.readouterr()
-    assert captured.out == r"""# +------------+------------+                                                        #
-# | Header 1   | Header 2   |                                                        #
-# +============+============+                                                        #
-# | Row 1-1    | Row 1-2    |                                                        #
-# +------------+------------+                                                        #
-# | Row 2-1    | Row 2-2    |                                                        #
-# +------------+------------+                                                        #
-"""
+    assert "# +------------+------------+" in captured.out
+    assert "# | Header 1   | Header 2   |" in captured.out
+    assert "# +============+============+" in captured.out
+    assert "# | Row 1-1    | Row 1-2    |" in captured.out
+    assert "# +------------+------------+" in captured.out
+    assert "# | Row 2-1    | Row 2-2    |" in captured.out
+    assert "# +------------+------------+" in captured.out
+
     headers = ['Header 1' * 60, 'Header 2']
     rows = [['Row 1-1', 'Row 1-2'], ['Row 2-1', 'Row 2-2']]
     importphotos.helpers.cli.print_table(headers, rows)
@@ -85,13 +87,13 @@ def test_print_progress_bar(capsys):
     """Test the print_progress_bar function."""
     importphotos.helpers.cli.print_progress_bar(0, 10, length=10)
     captured = capsys.readouterr()
-    assert captured.out == """\r |----------| 0.0% \r"""
+    assert "\r#  |--------------------------------------------------------------------------| 0.0% #\r" in captured.out
     importphotos.helpers.cli.print_progress_bar(5, 10, length=10)
     captured = capsys.readouterr()
-    assert captured.out == """\r |█████-----| 50.0% \r"""
+    assert "\r#  |████████████████████████████████████-------------------------------------| 50.0% #\r" in captured.out
     importphotos.helpers.cli.print_progress_bar(10, 10, length=10)
     captured = capsys.readouterr()
-    assert captured.out == """\r |██████████| 100.0% \r\n"""
+    assert "\r#  |████████████████████████████████████████████████████████████████████████| 100.0% #\r\n" in captured.out
 
 def test_input_yes_no(mocker, capsys):
     """Test the input_yes_no function."""
