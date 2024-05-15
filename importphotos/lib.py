@@ -99,6 +99,8 @@ class ImportJob(Job):
             try:
                 shutil.copy(photo.path, self.destination_folder)
                 copied_files.append(photo)
+            except shutil.SameFileError:
+                copied_files.append(photo)
             except shutil.Error as err:
                 errored_files.append(photo)
                 if verbose:
@@ -139,7 +141,6 @@ class ImportJob(Job):
                 jobs[year_month] = ImportJob(folder, os.path.join(self.destination_folder, year_month), self.overwrite)
             else:
                 jobs[year_month].add_photo(photo)
-        print(jobs)
         return jobs
 
     def __str__(self):
@@ -167,21 +168,21 @@ class Folder():
         found_files = []
         for root, dirs, files in os.walk(self.path):
             found_photos.extend([Photo(os.path.join(root,k)) for k in files if k.upper().endswith(extensions)])
-            found_files.extend([os.path.join(root,k) for k in files])
-            print_message(f"Found {len(files)} {extensions} files in {root}")
+            found_files.extend([os.path.join(root,k) for k in files if not k.upper().endswith(extensions)])
+            print_message(f"Found {len(files)} files in {root}")
             if verbose:
                 print_message(f"{len(found_photos)} Selected from {root}")
                 print_message(f"{len(dirs)} folders in {root}")
                 for file in found_photos:
-                    print_message(f"\t-{file}")
-                print_message(f"{len(found_files)-len(found_photos)} Not selected from {root}")
+                    print_message(f"{file}")
+                print_message(f"{len(found_files)} Not selected from {root}")
                 for file in (file for file in found_files if file not in found_photos):
-                    print_message(f"\t-{file}")
+                    print_message(f"{file}")
             if not recurse:
                 break
-        print_message(f"Selected {len(found_photos)} {extensions} total.")
+        print_message(f"Found {len(found_photos)} {extensions} total in {self.path}.")
         self.photos = found_photos
-        return found_files, found_photos
+        return len(found_photos)
 
     def filter_by_date(self, start, end, verbose = False):
         """Filter files by date modified."""
@@ -189,12 +190,18 @@ class Folder():
         for photo in self.photos:
             if photo.date_taken >= start and photo.date_taken <= end:
                 filtered_files.append(photo)
-            elif verbose:
-                print(f"Not selected {photo}")  
+            else:
+                print(verbose)
+                if verbose:
+                    print_message(f"Not selected {photo}")
         if verbose:
             for photo in filtered_files:
-                print(f"Selected {photo}")
-        return filtered_files
+                print_message(f"Selected {photo}")
+        print_message(f"Selected {len(filtered_files)} files in date range.")
+        if len(filtered_files) == 0:
+            return filtered_files
+        self.photos = filtered_files
+        return self.photos
 
     def __str__(self):
         return f"Folder({self.path}, {len(self.photos)} photos)"
@@ -216,11 +223,13 @@ class Photo():
         date_taken = None
         try:
             exif = Image.open(self.path).getexif()
+            print(exif)
             if not exif:
                 raise UnidentifiedImageError(f'Image {self.path} does not have EXIF data.')
             #text = exif[36867]
             text = exif[306]
-            date_taken = text
+            date_taken = text.replace(":", "-", 2).replace(" ", ":", 1)
+            return datetime.datetime.fromisoformat(date_taken)
         except UnidentifiedImageError:
             alternatives = [".JPG", ".JPEG"]
             for alt in alternatives:
@@ -229,7 +238,6 @@ class Photo():
                 if os.path.exists(new_path) and not new_path == file + extension.upper():
                     return Photo(new_path).date_taken
             return datetime.datetime.fromtimestamp(os.path.getmtime(self.path))
-        return datetime.datetime.fromisoformat(date_taken)
 
     def __str__(self):
         return f"{self.filename}"

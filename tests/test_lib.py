@@ -3,6 +3,8 @@ import datetime
 import pytest
 import shutil
 
+from PIL import Image
+
 from importphotos.lib import Job, DeleteJob, ImportJob, Folder, Photo
 
 def test_job_init(mocker):
@@ -203,17 +205,19 @@ def test_import_job_execute_copy(mocker, capsys):
     taken = datetime.datetime.fromisoformat("2021-01-01:00:00:00")
     mocker.patch("os.path.exists", return_value=True)
     mocker.patch("importphotos.lib.Photo._get_date_taken", return_value= taken)
-    mocker.patch("shutil.copy", return_value=None)
+    mocker.patch("shutil.copy", side_effect=[None, shutil.SameFileError("Error")] )
     folder = Folder("tests/data")
     photo = Photo("tests/data/IMG_20210101_000000.ARW")
+    second_photo = Photo("tests/data/IMG_20210102_000000.ARW")
     folder.add_photo(photo)
+    folder.add_photo(second_photo)
     job = ImportJob(folder, "tests/destination", False)
-    mocker.patch("os.path.exists", side_effect=[True, False])
+    mocker.patch("os.path.exists", side_effect=[True, False, False])
     copied, errored, skipped = job.execute(1)
 
     captured = capsys.readouterr()
-    assert "Processing 1 files, syncing with tests/destination" in captured.out
-    assert "Copied 1 files to destination" in captured.out
+    assert "Processing 2 files, syncing with tests/destination" in captured.out
+    assert "Copied 2 files to destination" in captured.out
     assert "Skipped 0 files with duplicates in destination" in captured.out
     assert "Errored out on 0 files" in captured.out
 
@@ -401,20 +405,21 @@ def test_folder_get_files_with_extension_no_recurse(mocker, capsys):
     mocker.patch("importphotos.lib.Photo._get_date_taken", return_value= taken)
     mocker.patch("os.walk", return_value=[("tests\\data", [], ["IMG_20210101_000000.ARW", "IMG_20210101_000001.JPG"])])
     folder = Folder("tests\\data")
-    found_files, found_photos = folder.get_files_with_extension((".ARW"))
-    assert found_files == ["tests\\data\\IMG_20210101_000000.ARW", "tests\\data\\IMG_20210101_000001.JPG"]
-    assert len(found_photos) == 1
-    assert found_photos[0].filename == "IMG_20210101_000000.ARW"
+    found_photos = folder.get_files_with_extension((".ARW"))
+    assert found_photos == 1
+    assert folder.photos[0].filename == "IMG_20210101_000000.ARW"
     captured = capsys.readouterr()
-    assert "Found 2 .ARW files in tests\\data" in captured.out
-    found_files, found_photos = folder.get_files_with_extension((".ARW"), False, True)
+    assert "Found 2 files in tests\\data" in captured.out
+    assert "Found 1 .ARW total in tests\\data" in captured.out
+    folder = Folder("tests\\data")
+    found_photos = folder.get_files_with_extension((".ARW"), False, True)
     captured = capsys.readouterr()
-    assert len(found_photos) == 1
+    assert found_photos == 1
     assert "1 Selected from tests\\data" in captured.out
     assert "0 folders in tests\\data" in captured.out
-    assert "\t-tests\\data\\IMG_20210101_000000.ARW" in captured.out
+    assert "IMG_20210101_000000.ARW" in captured.out
     assert "1 Not selected from tests\\data" in captured.out
-    assert "\t-tests\\data\\IMG_20210101_000001.JPG" in captured.out
+    assert "tests\\data\\IMG_20210101_000001.JPG" in captured.out
 
 def test_folder_get_files_with_extension_recurse(mocker, capsys):
     """Test Folder class get_files_with_extension."""
@@ -426,11 +431,10 @@ def test_folder_get_files_with_extension_recurse(mocker, capsys):
         ("tests\\data\\dir", [], ["IMG_20210101_000002.ARW"])
     ])
     folder = Folder("tests\\data")
-    found_files, found_photos = folder.get_files_with_extension((".ARW"), recurse=True)
-    assert len(found_photos) == 2
-    assert found_files == ["tests\\data\\IMG_20210101_000000.ARW", "tests\\data\\IMG_20210101_000001.JPG", "tests\\data\\dir\\IMG_20210101_000002.ARW"]
-    assert found_photos[0].filename == "IMG_20210101_000000.ARW"
-    assert found_photos[1].filename == "IMG_20210101_000002.ARW"
+    found_photos = folder.get_files_with_extension((".ARW"), recurse=True)
+    assert found_photos == 2
+    assert folder.photos[0].filename == "IMG_20210101_000000.ARW"
+    assert folder.photos[1].filename == "IMG_20210101_000002.ARW"
 
 def test_folder_filter_by_date(mocker, capsys):
     """Test Folder class filter_by_date."""
@@ -485,19 +489,19 @@ def test_photo_get_date_taken(mocker):
     taken = datetime.datetime.fromisoformat("2021-01-01:00:00:00")
     mocker.patch("os.path.exists", return_value=True)
     magic_mock = mocker.MagicMock()
-    magic_mock.getexif.return_value = dict({306: "2021-01-01:00:00:00"})
+    magic_mock.getexif.return_value = dict({306: "2021:01:01 00:00:00"})
     mocker.patch("PIL.Image.open", return_value=magic_mock)
     photo = Photo("tests/data/IMG_20210101_000000.ARW")
     assert photo.date_taken == taken
 
-def test_photo_get_date_taken_no_exif_alternative(mocker):
+def test_photo_get_date_taken_no_exif_alternative_exif(mocker):
     """Test Photo class get_date_taken, no exif data, alternative file to read."""
     taken = datetime.datetime.fromisoformat("2021-01-01:00:00:00")
     mocker.patch("os.path.exists", return_value=True)
     bad_mock = mocker.MagicMock()
-    bad_mock.getexif.return_value = None
+    bad_mock.getexif.side_effect = Image.UnidentifiedImageError('')
     good_mock = mocker.MagicMock()
-    good_mock.getexif.return_value = {306: "2021-01-01:00:00:00"}
+    good_mock.getexif.return_value = {306: "2021:01:01 00:00:00"}
     mocker.patch("PIL.Image.open", side_effect=[bad_mock, good_mock])
     photo = Photo("tests/data/IMG_20210101_000000.ARW")
     assert photo.date_taken == taken
