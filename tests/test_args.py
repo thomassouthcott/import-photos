@@ -18,7 +18,7 @@ def test_init():
 def test_recursive():
     """Test the recursive argument."""
     parser = ArgumentParser()
-    args = parser.parse_args()
+    args = parser.parse_args('')
     assert args.recursive is False
     args = parser.parse_args(['-r'])
     assert args.recursive is True
@@ -26,7 +26,7 @@ def test_recursive():
 def test_move():
     """Test the move argument."""
     parser = ArgumentParser()
-    args = parser.parse_args()
+    args = parser.parse_args('')
     assert args.move is False
     args = parser.parse_args(['-m'])
     assert args.move is True
@@ -34,7 +34,7 @@ def test_move():
 def test_interactive():
     """Test the interactive argument."""
     parser = ArgumentParser()
-    args = parser.parse_args()
+    args = parser.parse_args('')
     assert args.interactive is False
     args = parser.parse_args(['-i'])
     assert args.interactive is True
@@ -42,7 +42,7 @@ def test_interactive():
 def test_dry_run():
     """Test the dry_run argument."""
     parser = ArgumentParser()
-    args = parser.parse_args()
+    args = parser.parse_args('')
     assert args.dry_run is False
     args = parser.parse_args(['-d'])
     assert args.dry_run is True
@@ -50,7 +50,7 @@ def test_dry_run():
 def test_overwrite():
     """Test the overwrite argument."""
     parser = ArgumentParser()
-    args = parser.parse_args()
+    args = parser.parse_args('')
     assert args.overwrite is False
     args = parser.parse_args(['-w'])
     assert args.overwrite is True
@@ -66,7 +66,7 @@ def test_verbose():
 def test_foldername():
     """Test the foldername argument."""
     parser = ArgumentParser()
-    args = parser.parse_args()
+    args = parser.parse_args('')
     assert args.foldername is None
     args = parser.parse_args(['foldername'])
     assert args.foldername == 'foldername'
