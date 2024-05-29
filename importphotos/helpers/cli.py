@@ -8,7 +8,7 @@ from tabulate import tabulate
 
 def width():
     """Returns the width of the terminal"""
-    return shutil.get_terminal_size(fallback = (86, 1))[0]
+    return shutil.get_terminal_size(fallback = (100, 1))[0] -1
 
 def find_last_space(text : str, width : int):
     """Find the last space in the text before the width"""
