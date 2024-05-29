@@ -2,14 +2,14 @@
 import argparse
 import configparser
 import dataclasses
-
+import os
 from importphotos.validators import FileValidator
 
 # Configuration Constants
 @dataclasses.dataclass
 class Config:
     """Class to hold the configuration of the program"""
-    _config: dict[str, dict[str, str]]
+    _config: configparser.ConfigParser
     source_dir: str
     destination_dir: str
     file_types: list[str]
@@ -24,63 +24,40 @@ class Config:
         except configparser.Error as exc:
             raise exc
 
-    def save(self):
-        """Saves the configuration to the config file"""
-        self._set_config_item("DEFAULT", "source_dir", self.source_dir)
-        self._set_config_item("DEFAULT", "destination_dir", self.destination_dir)
-        self._set_config_item("DEFAULT", "file_types", self.file_types)
-        self._write_config(self)
-
     def validate(self):
         """Validates the configuration"""
         try:
             FileValidator.file_path(self.source_dir)
             FileValidator.file_path(self.destination_dir)
-            for file_type in self.file_types:
-                FileValidator.file_extension(file_type)
+            self.file_types = FileValidator.file_extension(" ".join(self.file_types))
         except argparse.ArgumentTypeError as exc:
             raise configparser.Error(f"Configuration is invalid: {exc}") from exc
 
     def get_config_item(self, group, key):
         """Returns the value of the key in the group"""
         try:
-            print(self._config)
-            if not group in self._config.keys():
+            if not self._config.has_section(group) and group!="DEFAULT":
                 raise KeyError(f"Group {group} not found")
-            if not key in self._config[group].keys():
+            if group=="DEFAULT" and not self._config.has_option("", key):
                 raise KeyError(f"Key {key} not found in group {group}")
-            if key.endswith("s"):
-                return self._config[group][key].split(", ")
+            elif not self._config.has_option(group, key):
+                raise KeyError(f"Key {key} not found in group {group}")
+            if key.lower().endswith("s"):
+                return tuple(self._config[group][key].split(" "))
             return self._config[group][key]
         except KeyError as exc:
-            raise KeyError(f"Key {key} not found in group {group}") from exc
-
-    def _set_config_item(self, group, key, value):
-        """Sets the value of the key in the group"""
-        try:
-            if not group in self._config.keys():
-                raise KeyError(f"Group {group} not found")
-            if not key in self._config[group].keys():
-                raise KeyError(f"Key {key} not found in group {group}")
-            if key.endswith("s"):
-                print(f"Setting {key} to {", ".join(value)}")
-                self._config[group][key] = ", ".join(value)
-            else:
-                self._config[group][key] = value
-        except KeyError as exc:
+            print(exc)
             raise KeyError(f"Key {key} not found in group {group}") from exc
 
     def _read_config(self, config_file = "config.ini"):
         """Loads the config from the config file"""
         config = configparser.ConfigParser()
-        return config.read(config_file)
+        config.read(os.path.abspath(config_file))
+        return config
 
     def _write_config(self, config_file = "config.ini"):
-        """Saves the config to the config file"""        
-        config = configparser.ConfigParser()
-        config.read_dict(self._config)
-        with open(config_file, "w", encoding='utf-8') as file:
-            config.write(file)
+        """Saves the config to the config file"""
+        self._config.write(os.path.abspath(config_file))
 
     def __str__(self):
         return f"source_dir={self.source_dir}, destination_dir={self.destination_dir}, file_types={", ".join(self.file_types)}"
