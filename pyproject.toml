@@ -1,5 +1,5 @@
 [project]
-name = "import_photos"
+name = "importphotos"
 version = "1.1.0"
 description = "Imports photos using file metadata."
 readme = "README.md"
@@ -18,13 +18,16 @@ file = "LICENSE"
 
 [project.urls]
 homepage = "https://hotdog.studio"
+github = "https://github.com/thomassouthcott/import-photos"
 
 [project.scripts]
 import_photos = "importphotos.main:main"
+
+[tool.setuptools.package-data]
+importphotos = ["*.ini"]
 
 [tool.pytest.ini_options]
 testpaths = "tests"
 addopts = [
     "--color=yes",
 ]
-    

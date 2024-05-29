@@ -2,8 +2,10 @@
 import argparse
 import configparser
 import dataclasses
+import inspect
 import os
 from importphotos.validators import FileValidator
+import importphotos
 
 # Configuration Constants
 @dataclasses.dataclass
@@ -49,8 +51,10 @@ class Config:
             print(exc)
             raise KeyError(f"Key {key} not found in group {group}") from exc
 
-    def _read_config(self, config_file = "config.ini"):
+    def _read_config(self, config_file = None):
         """Loads the config from the config file"""
+        if config_file is None:
+            config_file = os.path.join(os.path.dirname(inspect.getfile(importphotos)),"config.ini")
         config = configparser.ConfigParser()
         config.read(os.path.abspath(config_file))
         return config
