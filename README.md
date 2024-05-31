@@ -14,10 +14,14 @@ Edit importphotos/config.ini.
 
 Then install with pip. (Remember to check privileges)
 
-    pip install .
+    $ pip install .
 
+Or run the folder with python
 
+    $ python import-photos-dir
+    
 ## Usage
+
     $ import_photos.py [-h] [-r] [-m] [-s start-dtm end-dtm] [-i] [-e EXTENSION [EXTENSION ...]] [--version] [-p PATH]
                         [-o DESTINATION] [-d] [-w] [-v]
                         [foldername]
