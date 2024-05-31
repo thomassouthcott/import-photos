@@ -18,7 +18,7 @@ Then install with pip. (Remember to check privileges)
 
 
 ## Usage
-    $ ImportPhotos.py [-h] [-r] [-m] [-s start-dtm end-dtm] [-i] [-e EXTENSION [EXTENSION ...]] [--version] [-p PATH]
+    $ import_photos.py [-h] [-r] [-m] [-s start-dtm end-dtm] [-i] [-e EXTENSION [EXTENSION ...]] [--version] [-p PATH]
                         [-o DESTINATION] [-d] [-w] [-v]
                         [foldername]
 ### Positional Arguments
