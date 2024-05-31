@@ -35,7 +35,7 @@ Name of the sub-folder to copy files to. If not provided, will sort by year-mont
 <b><i>All Optional</i></b>
 | Option | Description |
 | ------ | ----------- |
-|  <i>-h, --help</i>          |  show this help message and exit |
+|  <i>-h, --help</i>          |  show the help message and exit |
   <i>-r, --recursive</i>      | Recursively search for files in subfolders of source folder. |
   <i>-m, --move </i>          | Deletes source files after copying. |
   <i>-s, --date-search start-dtm end-dtm</i> | Filter source files by start and end date. ISOformat - YYYY-MM-DD:HH:mm:ss |
